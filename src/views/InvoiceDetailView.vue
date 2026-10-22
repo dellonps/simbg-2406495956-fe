@@ -1,0 +1,13 @@
+<script setup lang="ts">
+import { onMounted, ref } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
+import { request } from '@/api/client'
+import LoadingState from '@/components/LoadingState.vue'
+import { formatDate, formatRupiah } from '@/utils/format'
+import type { Invoice } from '@/types/simbg'
+
+const route = useRoute(); const invoice = ref<Invoice | null>(null); const loading = ref(true); const error = ref('')
+onMounted(async () => { try { invoice.value = await request<Invoice>(`/invoice/${encodeURIComponent(String(route.params.invoiceNumber))}`) } catch (cause) { error.value = cause instanceof Error ? cause.message : 'Gagal memuat invoice.' } finally { loading.value = false } })
+</script>
+
+<template><main class="page"><RouterLink class="back-link" to="/invoice">← Kembali ke Invoice</RouterLink><LoadingState :loading="loading" :error="error"><template v-if="invoice"><header class="page-header"><div><p class="eyebrow">Detail Invoice</p><h1 class="mono-title">{{ invoice.invoiceNumber }}</h1><p class="subtitle">Tagihan claim {{ invoice.claimId }}</p></div><span class="pill" :class="invoice.status === 'DIBAYAR' ? 'pill-green' : ''">{{ invoice.status.replaceAll('_', ' ') }}</span></header><section class="summary-grid"><article class="summary-card"><span>Total tagihan</span><strong>{{ formatRupiah(invoice.totalAmount) }}</strong></article><article class="summary-card"><span>Tanggal invoice</span><strong class="small-value">{{ formatDate(invoice.invoiceDate) }}</strong></article><article class="summary-card"><span>Jatuh tempo</span><strong class="small-value">{{ formatDate(invoice.dueDate) }}</strong></article><article class="summary-card"><span>Tanggal claim</span><strong class="small-value">{{ formatDate(invoice.claimDate) }}</strong></article></section><section class="section-block"><header class="section-heading"><div><h2>Rincian Claim Item</h2><p>Item yang menjadi dasar penerbitan invoice.</p></div></header><div class="table-wrap"><table><thead><tr><th>Deskripsi</th><th>Komponen</th><th>Kuantitas</th><th>Harga satuan</th><th>Jumlah</th></tr></thead><tbody><tr v-for="item in invoice.claimItems || []" :key="item.id"><td>{{ item.description }}</td><td>{{ item.componentName }}</td><td>{{ item.quantity }}</td><td>{{ formatRupiah(item.unitPrice) }}</td><td>{{ formatRupiah(item.amount) }}</td></tr><tr v-if="!invoice.claimItems?.length"><td colspan="5" class="empty">Tidak ada item claim.</td></tr></tbody><tfoot><tr><th colspan="4">Total invoice</th><th>{{ formatRupiah(invoice.totalAmount) }}</th></tr></tfoot></table></div></section></template></LoadingState></main></template>

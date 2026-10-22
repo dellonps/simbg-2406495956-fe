@@ -1,0 +1,13 @@
+<script setup lang="ts">
+import { onMounted, reactive, ref } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
+import { request } from '@/api/client'
+import type { Claim, Invoice } from '@/types/simbg'
+
+const router = useRouter(); const claims = ref<Claim[]>([]); const form = reactive({ claimId: '', invoiceDate: '', dueDate: '' }); const loading = ref(true); const saving = ref(false); const error = ref('')
+const approvedClaims = () => claims.value.filter((claim) => claim.status === 'DISETUJUI')
+onMounted(async () => { try { claims.value = await request<Claim[]>('/claim') } catch (cause) { error.value = cause instanceof Error ? cause.message : 'Gagal memuat claim.' } finally { loading.value = false } })
+async function submit() { error.value = ''; if (form.dueDate <= form.invoiceDate) { error.value = 'Tanggal jatuh tempo harus setelah tanggal invoice.'; return } saving.value = true; try { const invoice = await request<Invoice>('/invoice', { method: 'POST', body: JSON.stringify(form) }); await router.push(`/invoice/${encodeURIComponent(invoice.invoiceNumber)}`) } catch (cause) { error.value = cause instanceof Error ? cause.message : 'Gagal menerbitkan invoice.' } finally { saving.value = false } }
+</script>
+
+<template><main class="page narrow"><RouterLink class="back-link" to="/invoice">← Kembali ke Invoice</RouterLink><header class="page-header"><div><p class="eyebrow">Pembayaran Program</p><h1>Penerbitan Invoice</h1><p class="subtitle">Terbitkan tagihan dari claim yang telah disetujui.</p></div></header><p v-if="loading" class="notice">Memuat claim…</p><form v-else class="form-card" @submit.prevent="submit"><label>Claim disetujui<select v-model="form.claimId" required><option value="" disabled>Pilih claim</option><option v-for="claim in approvedClaims()" :key="claim.id" :value="claim.id">{{ claim.id }} · {{ new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(claim.totalClaim) }} ({{ claim.claimDate }})</option></select></label><p v-if="!approvedClaims().length" class="helper-text">Belum ada claim berstatus DISETUJUI untuk ditagihkan.</p><div class="form-grid"><label>Tanggal invoice<input v-model="form.invoiceDate" type="date" required></label><label>Jatuh tempo<input v-model="form.dueDate" type="date" :min="form.invoiceDate" required></label></div><p v-if="error" class="form-error" role="alert">{{ error }}</p><div class="form-actions"><RouterLink class="button button-secondary" to="/invoice">Batal</RouterLink><button class="button" :disabled="saving || !approvedClaims().length">{{ saving ? 'Menerbitkan…' : 'Terbitkan Invoice' }}</button></div></form></main></template>
