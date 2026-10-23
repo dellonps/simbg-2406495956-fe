@@ -2,12 +2,16 @@
 import { RouterLink, RouterView } from 'vue-router'
 
 const navigation = [
-  { label: 'Beranda', to: '/home' },
-  { label: 'Sekolah', to: '/sekolah' },
-  { label: 'Anggaran', to: '/anggaran' },
-  { label: 'Claim', to: '/claim' },
-  { label: 'Invoice', to: '/invoice' },
+  { label: 'Ringkasan', to: '/home', icon: 'overview' },
+  { label: 'Sekolah', to: '/sekolah', icon: 'school' },
+  { label: 'Anggaran', to: '/anggaran', icon: 'budget' },
+  { label: 'Claim', to: '/claim', icon: 'claim' },
+  { label: 'Invoice', to: '/invoice', icon: 'invoice' },
 ]
+
+function reloadPage() {
+  window.location.reload()
+}
 </script>
 
 <template>
@@ -15,8 +19,20 @@ const navigation = [
     <nav class="navbar" aria-label="Navigasi utama">
       <RouterLink class="brand" to="/home" aria-label="SIMBG Beranda"><span class="brand-mark">S</span><span>SIMBG</span></RouterLink>
       <RouterLink v-for="item in navigation" :key="item.to" :to="item.to" class="nav-link">
-        {{ item.label }}
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <template v-if="item.icon === 'overview'"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></template>
+          <template v-else-if="item.icon === 'school'"><path d="m3 9 9-6 9 6v11H3z"/><path d="M8 20v-6h8v6M7 10h.01M12 10h.01M17 10h.01"/></template>
+          <template v-else-if="item.icon === 'budget'"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M16 5V3H6v2M3 10h18M7 15h4"/></template>
+          <template v-else-if="item.icon === 'claim'"><path d="M8 4H6a2 2 0 0 0-2 2v14h16V6a2 2 0 0 0-2-2h-2"/><rect x="8" y="2" width="8" height="5" rx="1.5"/><path d="m8 13 2 2 5-5M8 18h8"/></template>
+          <template v-else><path d="M7 3h7l5 5v13H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M14 3v6h5M9 13h6M9 17h6"/></template>
+        </svg>
+        <span>{{ item.label }}</span>
       </RouterLink>
+      <div class="nav-tools">
+        <span class="system-status"><i aria-hidden="true"></i>Sistem operasional</span>
+        <button class="reload-button" type="button" aria-label="Muat ulang halaman" title="Muat ulang halaman" @click="reloadPage"><span aria-hidden="true">↻</span></button>
+        <span class="account-badge" title="Administrator" aria-label="Administrator">AD</span>
+      </div>
     </nav>
     <RouterView />
   </div>
@@ -72,6 +88,9 @@ body {
 }
 
 .nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   padding: 0.625rem 0.875rem;
   border-radius: 0.5rem;
   color: #475569;
@@ -80,9 +99,40 @@ body {
   text-decoration: none;
 }
 
+.nav-icon { width:1rem; height:1rem; flex:none; }
+
 .nav-link:hover,
 .nav-link.router-link-active {
   color: #1d4ed8;
+  background: #eff6ff;
+}
+
+.nav-tools { display:flex; align-items:center; gap:.75rem; margin-left:auto; }
+.system-status { display:inline-flex; align-items:center; gap:.45rem; color:#647b70; font-size:.78rem; font-weight:600; white-space:nowrap; }
+.system-status i { width:.5rem; height:.5rem; border-radius:50%; background:#37a77b; box-shadow:0 0 0 4px #e4f5ed; }
+.reload-button {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: none;
+  place-items: center;
+  margin-left: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.625rem;
+  color: #475569;
+  background: #fff;
+  font: inherit;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.account-badge { display:grid; width:2.25rem; height:2.25rem; place-items:center; border-radius:50%; color:#28775e; background:#dff1e8; font-size:.7rem; font-weight:800; }
+
+.reload-button:hover {
+  border-color: #bfdbfe;
+  color: #2563eb;
   background: #eff6ff;
 }
 
@@ -92,6 +142,9 @@ body {
     justify-content: center;
     padding: 0.5rem 0.25rem;
   }
+
+  .nav-tools { margin-left:0; }
+  .system-status { display:none; }
 
   .brand {
     flex-basis: 100%;
@@ -208,6 +261,7 @@ tfoot th { color: #172554; background: #f8fafc; font-size: 0.85rem; text-transfo
 .form-card { display: grid; gap: 1.125rem; }
 .form-card label, .inline-form label { display: grid; gap: 0.45rem; color: #334155; font-size: 0.85rem; font-weight: 650; }
 input, select, textarea { width: 100%; min-height: 2.75rem; padding: 0.65rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; color: #172554; background: #fff; font: inherit; font-size: 0.9rem; }
+select { padding-right: 2.5rem; appearance: none; background-image: linear-gradient(45deg, transparent 50%, #64748b 50%), linear-gradient(135deg, #64748b 50%, transparent 50%); background-position: calc(100% - 17px) 50%, calc(100% - 12px) 50%; background-repeat: no-repeat; background-size: 5px 5px; }
 textarea { resize: vertical; }
 input:focus, select:focus, textarea:focus { border-color: #60a5fa; outline: 3px solid rgb(96 165 250 / 20%); }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
